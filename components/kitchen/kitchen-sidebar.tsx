@@ -20,11 +20,12 @@ function getFirebaseConfig() {
 export function KitchenSidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const [restaurantName, setRestaurantName] = useState("Restaurant")
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const pathname = usePathname()
   const { signOut, userProfile } = useAuth()
 
   useEffect(() => {
-    const loadRestaurantName = async () => {
+    const loadRestaurantData = async () => {
       try {
         if (!userProfile) return
         const cfg = getFirebaseConfig()
@@ -42,13 +43,14 @@ export function KitchenSidebar() {
         if (snap.exists()) {
           const data = snap.data() as any
           setRestaurantName(data.restaurantName || data.ownerName || "Restaurant")
+          setLogoUrl(data.logoUrl || null)
         }
       } catch (e) {
-        console.error("Failed to load restaurant name", e)
+        console.error("Failed to load restaurant data", e)
       }
     }
 
-    loadRestaurantName()
+    loadRestaurantData()
   }, [userProfile?.id])
 
   const menuItems = [
@@ -61,6 +63,7 @@ export function KitchenSidebar() {
 
   return (
     <>
+      {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-[#7A1E1E] text-[#FFF8E7] rounded-lg"
@@ -68,17 +71,29 @@ export function KitchenSidebar() {
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
+      {/* Sidebar */}
       <aside
         className={`fixed left-0 top-0 h-screen w-64 bg-[#1A1A1A] text-[#FFF8E7] transform transition-transform duration-300 z-40 lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full pt-20 lg:pt-8">
-          <div className="px-6 pb-8 border-b border-[#7A1E1E]">
+          {/* Logo Section */}
+          <div className="px-6 pb-8 border-b border-[#7A1E1E] flex flex-col items-center text-center">
+            <div className="w-16 h-16 rounded-full bg-[#2A2A2A] flex items-center justify-center mb-3 overflow-hidden shadow-lg border border-[#7A1E1E]/30">
+                {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                    <div className="text-[#FFD700]">
+                        <ChefHat size={28} />
+                    </div>
+                )}
+            </div>
             <h1 className="text-2xl font-serif font-bold text-[#FFD700]">{restaurantName}</h1>
             <p className="text-xs text-[#FFD700]/70 mt-1">Kitchen Panel</p>
           </div>
 
+          {/* Navigation */}
           <nav className="flex-1 px-4 py-8 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon
@@ -99,6 +114,7 @@ export function KitchenSidebar() {
             })}
           </nav>
 
+          {/* Logout */}
           <div className="px-4 pb-8 border-t border-[#7A1E1E]">
             <button
               onClick={async () => {
@@ -114,6 +130,7 @@ export function KitchenSidebar() {
         </div>
       </aside>
 
+      {/* Overlay */}
       {isOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setIsOpen(false)} />}
     </>
   )

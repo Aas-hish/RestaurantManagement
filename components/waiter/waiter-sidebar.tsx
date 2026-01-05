@@ -20,6 +20,7 @@ function getFirebaseConfig() {
 export function WaiterSidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const [restaurantName, setRestaurantName] = useState("Restaurant")
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const pathname = usePathname()
   const { signOut, userProfile } = useAuth()
 
@@ -42,6 +43,7 @@ export function WaiterSidebar() {
         if (snap.exists()) {
           const data = snap.data() as any
           setRestaurantName(data.restaurantName || data.ownerName || "Restaurant")
+          setLogoUrl(data.logoUrl || null)
         }
       } catch (e) {
         console.error("Failed to load restaurant name", e)
@@ -74,7 +76,16 @@ export function WaiterSidebar() {
         }`}
       >
         <div className="flex flex-col h-full pt-20 lg:pt-8">
-          <div className="px-6 pb-8 border-b border-[#7A1E1E]">
+          <div className="px-6 pb-8 border-b border-[#7A1E1E] flex flex-col items-center text-center">
+            <div className="w-16 h-16 rounded-full bg-[#2A2A2A] flex items-center justify-center mb-3 overflow-hidden shadow-lg border border-[#7A1E1E]/30">
+                {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                    <div className="text-[#FFD700]">
+                        <Receipt size={28} />
+                    </div>
+                )}
+            </div>
             <h1 className="text-2xl font-serif font-bold text-[#FFD700]">{restaurantName}</h1>
             <p className="text-xs text-[#FFD700]/70 mt-1">Waiter Panel</p>
           </div>

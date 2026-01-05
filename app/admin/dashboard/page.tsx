@@ -20,11 +20,11 @@ import { useAuth } from "@/context/auth-context"
 import {
   TrendingUp,
   ShoppingBag,
-  DollarSign,
-  Calendar,
+  IndianRupee, // Changed from DollarSign to IndianRupee
   ArrowUpRight,
   ArrowDownRight,
   Clock,
+  ChevronRight,
 } from "lucide-react"
 import {
   getStartOfDay,
@@ -34,11 +34,11 @@ import {
   getStartOfMonth,
   getEndOfMonth,
   calculateRevenueFromOrders,
-  getOrdersCount,
   getWeeklyRevenueData,
   getMonthlyRevenueData,
 } from "@/utils/revenue-utils"
 import type { Order } from "@/types"
+import Link from "next/link"
 
 export default function AdminDashboard() {
   const { userProfile } = useAuth()
@@ -161,12 +161,6 @@ export default function AdminDashboard() {
     [deliveredOrders],
   )
 
-  // Pending orders count (all orders)
-  const pendingOrders = useMemo(
-    () => allOrders.filter((o) => o.status === "pending").length,
-    [allOrders],
-  )
-
   useEffect(() => {
     if (allOrders.length > 0 || restaurantId) {
       setLoading(false)
@@ -175,175 +169,139 @@ export default function AdminDashboard() {
 
   const currentRevenue = useMemo(() => {
     switch (timeRange) {
-      case "today":
-        return todayRevenue
-      case "yesterday":
-        return yesterdayRevenue
-      case "week":
-        return weekRevenue
-      case "month":
-        return monthRevenue
-      default:
-        return todayRevenue
+      case "today": return todayRevenue
+      case "yesterday": return yesterdayRevenue
+      case "week": return weekRevenue
+      case "month": return monthRevenue
+      default: return todayRevenue
     }
   }, [timeRange, todayRevenue, yesterdayRevenue, weekRevenue, monthRevenue])
 
   const currentOrders = useMemo(() => {
     switch (timeRange) {
-      case "today":
-        return todayOrders
-      case "yesterday":
-        return yesterdayOrders
-      case "week":
-        return weekOrders
-      case "month":
-        return monthOrders
-      default:
-        return todayOrders
+      case "today": return todayOrders
+      case "yesterday": return yesterdayOrders
+      case "week": return weekOrders
+      case "month": return monthOrders
+      default: return todayOrders
     }
   }, [timeRange, todayOrders, yesterdayOrders, weekOrders, monthOrders])
 
   const currentChange = useMemo(() => {
     switch (timeRange) {
-      case "today":
-        return yesterdayVsTodayChange
-      case "yesterday":
-        return 0 // No comparison for yesterday
-      case "week":
-        return weekChange
-      case "month":
-        return monthChange
-      default:
-        return 0
+      case "today": return yesterdayVsTodayChange
+      case "yesterday": return 0
+      case "week": return weekChange
+      case "month": return monthChange
+      default: return 0
     }
   }, [timeRange, yesterdayVsTodayChange, weekChange, monthChange])
 
   const getTimeRangeLabel = () => {
     switch (timeRange) {
-      case "today":
-        return "Today"
-      case "yesterday":
-        return "Yesterday"
-      case "week":
-        return "This Week"
-      case "month":
-        return "This Month"
-      default:
-        return "Today"
+      case "today": return "Today"
+      case "yesterday": return "Yesterday"
+      case "week": return "This Week"
+      case "month": return "This Month"
+      default: return "Today"
+    }
+  }
+
+  // Consistent status colors with Orders Page
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200'
+      case 'cooking': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'ready': return 'bg-green-100 text-green-800 border-green-200'
+      case 'delivered': return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200'
+      default: return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-serif font-bold text-[#1A1A1A]">
-            Dashboard
-          </h1>
-          <p className="text-sm text-[#64748B] mt-1">
-            Real-time analytics and revenue insights (Delivered orders only)
-          </p>
+      {/* Premium Header user-select-none to prevent text selection while interacting with charts */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#7A1E1E] to-[#5d1515] text-[#FFF8E7] p-8 shadow-lg select-none">
+        <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+            <TrendingUp size={120} />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => setTimeRange("today")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              timeRange === "today"
-                ? "bg-[#7A1E1E] text-white"
-                : "bg-white text-[#475569] border border-[#E2E8F0] hover:bg-[#F8FAFC]"
-            }`}
-          >
-            Today
-          </button>
-          <button
-            onClick={() => setTimeRange("yesterday")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              timeRange === "yesterday"
-                ? "bg-[#7A1E1E] text-white"
-                : "bg-white text-[#475569] border border-[#E2E8F0] hover:bg-[#F8FAFC]"
-            }`}
-          >
-            Yesterday
-          </button>
-          <button
-            onClick={() => setTimeRange("week")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              timeRange === "week"
-                ? "bg-[#7A1E1E] text-white"
-                : "bg-white text-[#475569] border border-[#E2E8F0] hover:bg-[#F8FAFC]"
-            }`}
-          >
-            This Week
-          </button>
-          <button
-            onClick={() => setTimeRange("month")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              timeRange === "month"
-                ? "bg-[#7A1E1E] text-white"
-                : "bg-white text-[#475569] border border-[#E2E8F0] hover:bg-[#F8FAFC]"
-            }`}
-          >
-            This Month
-          </button>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div>
+                <h1 className="text-4xl font-serif font-bold mb-2 flex items-center gap-3">
+                    <TrendingUp className="w-8 h-8 text-[#FFD700]" />
+                    Dashboard
+                </h1>
+                <p className="text-[#FFF8E7]/80 max-w-xl text-lg font-light">
+                    Real-time analytics and revenue insights at a glance.
+                </p>
+            </div>
+             <div className="flex gap-2 flex-wrap bg-white/10 p-1.5 rounded-xl backdrop-blur-sm">
+              {(["today", "yesterday", "week", "month"] as const).map((r) => (
+                <button
+                key={r}
+                onClick={() => setTimeRange(r)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${
+                  timeRange === r
+                    ? "bg-[#FFD700] text-[#7A1E1E] shadow-md"
+                    : "text-[#FFF8E7] hover:bg-white/10"
+                }`}
+              >
+                {r}
+              </button>
+              ))}
+            </div>
         </div>
       </div>
 
-      {/* Main Stats Cards - Only 2 cards */}
+      {/* Main Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Total Revenue Card */}
-        <div className="glass-effect p-6 rounded-xl border border-[#E2E8F0]/70 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-[#FFD700]/20 to-[#FFD700]/10">
-              <DollarSign className="text-[#FFD700]" size={24} />
-            </div>
-            {timeRange !== "yesterday" && currentChange !== 0 ? (
-              <div
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
-                  currentChange >= 0
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {currentChange >= 0 ? (
-                  <ArrowUpRight size={14} />
-                ) : (
-                  <ArrowDownRight size={14} />
-                )}
-                {Math.abs(currentChange).toFixed(1)}%
-                {timeRange === "today" && " vs yesterday"}
-                {timeRange === "week" && " vs last week"}
-                {timeRange === "month" && " vs last month"}
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-[#E2E8F0] relative overflow-hidden group hover:border-[#FFD700]/50 transition-all">
+           <div className="absolute right-[-20px] top-[-20px] bg-[#FFD700]/10 w-40 h-40 rounded-full group-hover:scale-110 transition-transform" />
+           <div className="relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                  <div className="w-12 h-12 bg-[#FFD700]/20 rounded-xl flex items-center justify-center text-[#998100]">
+                    <IndianRupee size={24} />
+                  </div>
+                   {timeRange !== "yesterday" && currentChange !== 0 && (
+                    <div
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        currentChange >= 0
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                    >
+                        {currentChange >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                        {Math.abs(currentChange).toFixed(1)}%
+                    </div>
+                   )}
               </div>
-            ) : null}
-          </div>
-          <div>
-            <p className="text-sm text-[#64748B] mb-1">
-              {getTimeRangeLabel()} Revenue
-            </p>
-            <p className="text-3xl font-serif font-bold text-[#1A1A1A] mb-1">
-              ${currentRevenue.toFixed(2)}
-            </p>
-           
-          </div>
+              <div>
+                <p className="text-[#64748B] font-medium text-sm uppercase tracking-wider">{getTimeRangeLabel()} Revenue</p>
+                <p className="text-4xl font-serif font-bold text-[#1A1A1A] mt-1 flex items-center">
+                    <IndianRupee size={28} className="mt-1 mr-1" />
+                    {currentRevenue.toFixed(2)}
+                </p>
+                 <p className="text-sm text-[#94A3B8] mt-2">Gross earnings from delivered orders</p>
+              </div>
+           </div>
         </div>
 
         {/* Total Orders Card */}
-        <div className="glass-effect p-6 rounded-xl border border-[#E2E8F0]/70 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-[#7A1E1E]/20 to-[#7A1E1E]/10">
-              <ShoppingBag className="text-[#7A1E1E]" size={24} />
-            </div>
-          </div>
-          <div>
-            <p className="text-sm text-[#64748B] mb-1">
-              {getTimeRangeLabel()} Completed Orders
-            </p>
-            <p className="text-3xl font-serif font-bold text-[#1A1A1A] mb-1">
-              {currentOrders}
-            </p>
-          
-          </div>
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-[#E2E8F0] relative overflow-hidden group hover:border-[#7A1E1E]/50 transition-all">
+           <div className="absolute right-[-20px] top-[-20px] bg-[#7A1E1E]/5 w-40 h-40 rounded-full group-hover:scale-110 transition-transform" />
+           <div className="relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                 <div className="w-12 h-12 bg-[#7A1E1E]/10 rounded-xl flex items-center justify-center text-[#7A1E1E]">
+                    <ShoppingBag size={24} />
+                 </div>
+              </div>
+              <div>
+                 <p className="text-[#64748B] font-medium text-sm uppercase tracking-wider">{getTimeRangeLabel()} Orders</p>
+                 <p className="text-4xl font-serif font-bold text-[#1A1A1A] mt-1">{currentOrders}</p>
+              </div>
+           </div>
         </div>
       </div>
 
@@ -359,8 +317,9 @@ export default function AdminDashboard() {
               <p className="text-sm text-[#64748B] mt-1">Last 7 days</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-[#7A1E1E]">
-                ${weekRevenue.toFixed(2)}
+              <p className="text-2xl font-bold text-[#7A1E1E] flex items-center justify-end">
+                <IndianRupee size={20} />
+                {weekRevenue.toFixed(2)}
               </p>
               <p className="text-xs text-[#94A3B8]">Total this week</p>
             </div>
@@ -382,7 +341,7 @@ export default function AdminDashboard() {
               <YAxis
                 stroke="#64748B"
                 style={{ fontSize: "12px" }}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `₹${value}`}
               />
               <Tooltip
                 contentStyle={{
@@ -390,7 +349,7 @@ export default function AdminDashboard() {
                   border: "1px solid #E2E8F0",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => [`$${value.toFixed(2)}`, "Revenue"]}
+                formatter={(value: number) => [`₹${value.toFixed(2)}`, "Revenue"]}
               />
               <Area
                 type="monotone"
@@ -414,8 +373,9 @@ export default function AdminDashboard() {
               <p className="text-sm text-[#64748B] mt-1">Last 12 months</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-[#FFD700]">
-                ${monthRevenue.toFixed(2)}
+              <p className="text-2xl font-bold text-[#FFD700] flex items-center justify-end">
+                <IndianRupee size={20} />
+                {monthRevenue.toFixed(2)}
               </p>
               <p className="text-xs text-[#94A3B8]">Total this month</p>
             </div>
@@ -431,7 +391,7 @@ export default function AdminDashboard() {
               <YAxis
                 stroke="#64748B"
                 style={{ fontSize: "12px" }}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `₹${value}`}
               />
               <Tooltip
                 contentStyle={{
@@ -439,7 +399,7 @@ export default function AdminDashboard() {
                   border: "1px solid #E2E8F0",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => [`$${value.toFixed(2)}`, "Revenue"]}
+                formatter={(value: number) => [`₹${value.toFixed(2)}`, "Revenue"]}
               />
               <Bar
                 dataKey="revenue"
@@ -451,7 +411,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Comparison Chart */}
+      {/* Week vs Month Comparison */}
       <div className="glass-effect p-6 rounded-xl border border-[#E2E8F0]/70 shadow-lg">
         <div className="mb-6">
           <h3 className="text-lg font-serif font-bold text-[#1A1A1A]">
@@ -472,7 +432,7 @@ export default function AdminDashboard() {
             <YAxis
               stroke="#64748B"
               style={{ fontSize: "12px" }}
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => `₹${value}`}
             />
             <Tooltip
               contentStyle={{
@@ -480,6 +440,7 @@ export default function AdminDashboard() {
                 border: "1px solid #E2E8F0",
                 borderRadius: "8px",
               }}
+              formatter={(value: number, name: string) => [name === "Daily Revenue" ? `₹${value.toFixed(2)}` : value, name]}
             />
             <Legend />
             <Line
@@ -502,7 +463,7 @@ export default function AdminDashboard() {
         </ResponsiveContainer>
       </div>
 
-      {/* Recent Orders - Card Layout */}
+      {/* Recent Orders - Consistent Styling */}
       <div className="glass-effect p-6 rounded-xl border border-[#E2E8F0]/70 shadow-lg">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -510,94 +471,62 @@ export default function AdminDashboard() {
               Recent Orders
             </h3>
             <p className="text-sm text-[#64748B] mt-1">
-              Latest 9 orders across all statuses
+              Latest activity overview
             </p>
           </div>
-          <button className="text-[#7A1E1E] text-sm font-medium hover:underline">
-            View All
-          </button>
+          <Link href="/admin/orders" className="text-[#7A1E1E] text-sm font-bold hover:underline flex items-center gap-1">
+            View All Orders <ChevronRight size={16} />
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allOrders
-            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-            .slice(0, 9)
-            .map((order) => (
-            <div key={order.id} className="border border-[#E2E8F0] rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-2">
-                <div>
+          {allOrders.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-gray-400">No orders yet</div>
+          ) : (
+            allOrders
+              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+              .slice(0, 9)
+              .map((order) => (
+              <div key={order.id} className="group relative flex flex-col rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm transition-all hover:border-[#7A1E1E] hover:shadow-md">
+                <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h4 className="font-medium text-[#1A1A1A]">
-                      {order.orderNumber ? `Order #${order.orderNumber}` : `Order #${order.id.substring(0, 6)}`}
+                    <h4 className="font-bold text-[#1A1A1A]">
+                       Table {order.table.replace(/^\D+/, '')}
                     </h4>
-                     <p className="text-sm font-medium text-[#575656] mt-1">
-                    {order.waiterName || 'Walk-in Customer'}
-                  </p>
-                    <p className="text-xs text-[#94A3B8] mt-0.5">
-                      {new Date(order.timestamp).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </p>
+                    <p className="text-xs text-[#94A3B8] font-mono mt-0.5">#{order.orderNumber || order.id.slice(-6)}</p>
                   </div>
-                 
-                </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    order.status === 'delivered'
-                      ? 'bg-green-100 text-green-800'
-                      : order.status === 'ready'
-                      ? 'bg-blue-100 text-blue-800'
-                      : order.status === 'cooking'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-orange-100 text-orange-800'
-                  }`}
-                >
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </span>
-              </div>
-              
-              <div className="mt-3 text-sm">
-                <div className="flex justify-between py-1">
-                  <span className="text-[#64748B]">Items:</span>
-                  <span className="font-medium">{order.items?.length || 0}</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-[#64748B]">Amount:</span>
-                  <span className="font-medium">${order.totalAmount?.toFixed(2) || '0.00'}</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-[#64748B]">Time:</span>
-                  <span>
-                    {new Date(order.timestamp).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusColor(order.status)}`}
+                  >
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
                 </div>
-              </div>
-              
-              {order.items?.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-[#E2E8F0]">
-                  <p className="text-xs font-medium text-[#64748B] mb-1">Items:</p>
-                  <div className="space-y-1">
-                    {order.items.slice(0, 2).map((item, idx) => (
-                      <div key={idx} className="flex justify-between text-sm">
-                        <span className="truncate">{item.name}</span>
-                        <span className="ml-2 whitespace-nowrap">x{item.quantity}</span>
-                      </div>
-                    ))}
-                    {order.items.length > 2 && (
-                      <p className="text-xs text-[#94A3B8] text-right">
-                        +{order.items.length - 2} more items
-                      </p>
-                    )}
-                  </div>
+                
+                <div className="space-y-2 mt-2 text-sm flex-1">
+                   {order.items.slice(0, 2).map((item, idx) => (
+                     <div key={idx} className="flex justify-between">
+                        <span className="text-[#475569]">{item.name}</span>
+                        <span className="text-[#1A1A1A] font-medium">x{item.quantity}</span>
+                     </div>
+                   ))}
+                   {order.items.length > 2 && (
+                     <p className="text-xs text-[#94A3B8] italic pt-1">+{order.items.length - 2} more items</p>
+                   )}
                 </div>
-              )}
-            </div>
-          ))}
+                
+                <div className="mt-4 pt-3 border-t border-[#F1F5F9] flex justify-between items-center text-sm">
+                   <div className="flex items-center gap-1.5 text-[#64748B]">
+                      <Clock size={14} />
+                      {new Date(order.timestamp).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}
+                   </div>
+                   <div className="font-bold text-[#7A1E1E] flex items-center">
+                      <IndianRupee size={14} />
+                      {order.totalAmount.toFixed(2)}
+                   </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

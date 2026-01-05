@@ -85,7 +85,7 @@ export function calculateRevenueFromOrders(
   // Use completedAt timestamp for delivered orders (when revenue was actually earned)
   if (startDate && endDate) {
     filtered = filtered.filter((o) => {
-      const orderDate = new Date(o.completedAt || o.timestamp)
+      const orderDate = new Date(o.timestamp)
       return orderDate >= startDate && orderDate <= endDate
     })
   }
@@ -106,7 +106,7 @@ export function getOrdersCount(
   // Then filter by date range if provided
   if (startDate && endDate) {
     filtered = filtered.filter((o) => {
-      const orderDate = new Date(o.completedAt || o.timestamp)
+      const orderDate = new Date(o.timestamp)
       return orderDate >= startDate && orderDate <= endDate
     })
   }
@@ -201,7 +201,7 @@ export function getWeeklyRevenueData(orders: Order[]): Array<{
 
     // Filter by completedAt (when order was delivered) or timestamp as fallback
     const dayOrders = deliveredOnly.filter((o) => {
-      const orderDate = new Date(o.completedAt || o.timestamp)
+      const orderDate = new Date(o.timestamp)
       return orderDate >= start && orderDate <= end
     })
 
@@ -247,7 +247,7 @@ export function getMonthlyRevenueData(orders: Order[]): Array<{
 
     // Filter by completedAt (when order was delivered) or timestamp as fallback
     const monthOrders = deliveredOnly.filter((o) => {
-      const orderDate = new Date(o.completedAt || o.timestamp)
+      const orderDate = new Date(o.timestamp)
       return orderDate >= start && orderDate <= end
     })
 

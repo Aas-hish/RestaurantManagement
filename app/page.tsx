@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 export default function Home() {
   const { user, userProfile, loading } = useAuth()
@@ -33,12 +34,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FFF8E7]">
-        <div className="text-center">
-          <div className="inline-block w-12 h-12 border-4 border-[#7A1E1E] border-t-[#FFD700] rounded-full animate-spin mb-4"></div>
-          <p className="text-[#1A1A1A] font-serif text-lg">Loading...</p>
-        </div>
-      </div>
+      <LoadingSpinner fullScreen />
     )
   }
 

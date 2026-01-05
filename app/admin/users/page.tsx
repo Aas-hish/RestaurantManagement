@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useUsers } from "@/hooks/use-users"
-import { Trash2, Plus } from "lucide-react"
+import { Trash2, Plus, Users, ChefHat, UtensilsCrossed, ShieldCheck, Mail, Calendar, Search } from "lucide-react"
 import type { User } from "@/types"
 import { useAlert } from "@/components/alert/alert-dialog"
 
 export default function AdminUsersPage() {
-  const { users, deleteUser, addUser } = useUsers()
+  const { users, deleteUser, addUser, loading: usersLoading } = useUsers()
   const [showAddForm, setShowAddForm] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -18,13 +18,31 @@ export default function AdminUsersPage() {
   })
   const [loading, setLoading] = useState(false)
   const { showAlert } = useAlert()
+  const [searchTerm, setSearchTerm] = useState("")
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    return {
+      waiters: users.filter(u => u.role === "waiter").length,
+      kitchen: users.filter(u => u.role === "kitchen").length,
+      admins: users.filter(u => u.role === "admin").length,
+      total: users.length
+    }
+  }, [users])
+
+  // Filter users
+  const filteredUsers = useMemo(() => {
+    return users.filter(u => 
+      u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [users, searchTerm])
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      // Check if email already exists
       if (users.some((u) => u.email === formData.email)) {
         alert("Email already in use")
         setLoading(false)
@@ -53,9 +71,9 @@ export default function AdminUsersPage() {
 
   const handleDeleteUser = async (userId: string) => {
     const confirmed = await showAlert({
-      title: "Delete User",
-      description: "Are you sure you want to delete this user? This action cannot be undone.",
-      actionText: "Delete",
+      title: "Delete Staff Member",
+      description: "Are you sure you want to remove this staff member? Their access will be revoked immediately.",
+      actionText: "Remove Staff",
       cancelText: "Cancel"
     })
 
@@ -69,208 +87,227 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-serif font-bold text-[#1A1A1A]">Staff Management</h1>
-          <p className="text-[#475569] mt-1">Manage restaurant staff</p>
+    <div className="space-y-8 max-w-[1600px] mx-auto pb-10">
+      {/* Header & Stats Section */}
+      <div className="grid lg:grid-cols-4 gap-6">
+        {/* Title Card */}
+        <div className="lg:col-span-2 bg-[#7A1E1E] rounded-2xl p-8 text-[#FFF8E7] relative overflow-hidden shadow-lg flex flex-col justify-between min-h-[180px]">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+            <Users size={140} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-serif font-bold mb-2">Team Management</h1>
+            <p className="text-[#FFF8E7]/80"> oversee your restaurant's workforce and access controls.</p>
+          </div>
+          <div className="flex gap-4 mt-6">
+            <button 
+                onClick={() => setShowAddForm(true)}
+                className="bg-[#FFD700] text-[#7A1E1E] px-6 py-2.5 rounded-lg hover:bg-[#E6C200] transition-colors font-bold flex items-center gap-2 shadow-md w-fit"
+            >
+                <Plus size={20} />
+                Add New Staff
+            </button>
+          </div>
         </div>
-        <button 
-          onClick={() => setShowAddForm(!showAddForm)} 
-          className="bg-[#7A1E1E] text-white px-6 py-2 rounded-lg hover:bg-[#5d1515] transition-colors font-medium flex items-center gap-2"
-        >
-          <Plus size={20} />
-          Add Staff
-        </button>
+
+        {/* Stats: Waiters */}
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-[#E2E8F0] flex flex-col justify-center relative overflow-hidden group hover:border-[#FFD700]/50 transition-all">
+            <div className="absolute right-[-20px] top-[-20px] bg-[#FFD700]/10 w-32 h-32 rounded-full group-hover:scale-110 transition-transform" />
+            <div className="relative z-10">
+                <div className="w-12 h-12 bg-[#FFD700]/20 rounded-xl flex items-center justify-center text-[#998100] mb-4">
+                    <UtensilsCrossed size={24} />
+                </div>
+                <h3 className="text-[#64748B] font-medium text-sm uppercase tracking-wider">Active Waiters</h3>
+                <p className="text-4xl font-serif font-bold text-[#1A1A1A] mt-1">{stats.waiters}</p>
+                 <p className="text-sm text-[#64748B] mt-2">Serving customers</p>
+            </div>
+        </div>
+
+        {/* Stats: Kitchen */}
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-[#E2E8F0] flex flex-col justify-center relative overflow-hidden group hover:border-[#7A1E1E]/50 transition-all">
+             <div className="absolute right-[-20px] top-[-20px] bg-[#7A1E1E]/5 w-32 h-32 rounded-full group-hover:scale-110 transition-transform" />
+            <div className="relative z-10">
+                <div className="w-12 h-12 bg-[#7A1E1E]/10 rounded-xl flex items-center justify-center text-[#7A1E1E] mb-4">
+                    <ChefHat size={24} />
+                </div>
+                <h3 className="text-[#64748B] font-medium text-sm uppercase tracking-wider">Kitchen Staff</h3>
+                <p className="text-4xl font-serif font-bold text-[#1A1A1A] mt-1">{stats.kitchen}</p>
+                 <p className="text-sm text-[#64748B] mt-2">Preparing orders</p>
+            </div>
+        </div>
       </div>
 
-      {/* Add User Form */}
+       {/* Search Bar */}
+       <div className="bg-white p-4 rounded-xl shadow-sm border border-[#E2E8F0] flex items-center gap-4 max-w-md">
+            <Search className="text-[#94A3B8]" size={20} />
+            <input 
+                type="text" 
+                placeholder="Search staff by name or email..." 
+                className="flex-1 outline-none text-[#1A1A1A] placeholder-[#94A3B8]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+       </div>
+
+
+      {/* Add User Form Modal */}
       {showAddForm && (
-        <div className="mt-8 mb-10 animate-in fade-in-50">
-          <div className="relative bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 ease-out">
-            {/* Form Header */}
-            <div className="px-6 py-5 bg-gray-50 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">Add New Staff Member</h2>
-                  <p className="mt-1 text-sm text-gray-500">Enter the staff member's details below</p>
-                </div>
-                <button
-                  onClick={() => setShowAddForm(false)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-200"
-                  aria-label="Close form"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-[#7A1E1E] p-6 text-white flex justify-between items-center">
+                <h2 className="text-xl font-serif font-bold">New Staff Member</h2>
+                <button onClick={() => setShowAddForm(false)} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors">
+                    <Plus size={24} className="rotate-45" />
                 </button>
-              </div>
             </div>
-
-            {/* Form Content */}
-            <div className="p-6">
-
-                <form onSubmit={handleAddUser} className="space-y-6">
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700">Name</label>
-                      <input
+            
+            <form onSubmit={handleAddUser} className="p-6 space-y-5">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#475569]">Full Name</label>
+                    <input
                         type="text"
+                        required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-200"
-                        placeholder="John Doe"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
-                      <input
+                        className="w-full px-4 py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] focus:ring-2 focus:ring-[#7A1E1E]/20 focus:border-[#7A1E1E] outline-none"
+                        placeholder="e.g. Michael Chen"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#475569]">Email Address</label>
+                    <input
                         type="email"
+                        required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-200"
-                        placeholder="john@example.com"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700">Password</label>
-                      <input
+                        className="w-full px-4 py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] focus:ring-2 focus:ring-[#7A1E1E]/20 focus:border-[#7A1E1E] outline-none"
+                        placeholder="staff@restaurant.com"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#475569]">Password</label>
+                    <input
                         type="password"
+                        required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-200"
+                        className="w-full px-4 py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] focus:ring-2 focus:ring-[#7A1E1E]/20 focus:border-[#7A1E1E] outline-none"
                         placeholder="••••••••"
-                        required
-                      />
+                        minLength={6}
+                    />
+                    <p className="text-xs text-[#94A3B8]">Must be at least 6 characters</p>
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#475569]">Role</label>
+                    <div className="grid grid-cols-3 gap-2">
+                        {['waiter', 'kitchen', 'admin'].map((role) => (
+                            <button
+                                key={role}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, role: role as any })}
+                                className={`py-2 px-3 rounded-lg text-sm font-medium capitalize border transition-all ${
+                                    formData.role === role 
+                                    ? 'bg-[#7A1E1E] text-white border-[#7A1E1E]' 
+                                    : 'bg-white text-[#64748B] border-[#E2E8F0] hover:bg-[#F8FAFC]'
+                                }`}
+                            >
+                                {role}
+                            </button>
+                        ))}
                     </div>
+                </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700">Role</label>
-                      <select
-                        value={formData.role}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            role: e.target.value as "waiter" | "kitchen" | "admin",
-                          })
-                        }
-                        className="block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-200 appearance-none"
-                      >
-                        <option value="waiter">Waiter</option>
-                        <option value="kitchen">Kitchen Staff</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 pt-4">
+                <div className="pt-4 flex gap-3">
                     <button
-                      type="button"
-                      onClick={() => setShowAddForm(false)}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#7A1E1E] focus:ring-offset-2 transition duration-200"
+                        type="button"
+                        onClick={() => setShowAddForm(false)}
+                        className="flex-1 px-4 py-2 rounded-lg border border-[#E2E8F0] text-[#64748B] font-medium hover:bg-[#F8FAFC] transition-colors"
                     >
-                      Cancel
+                        Cancel
                     </button>
                     <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex items-center justify-center rounded-lg bg-[#7A1E1E] px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-[#5d1515] focus:outline-none focus:ring-2 focus:ring-[#7A1E1E] focus:ring-offset-2 transition duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 px-4 py-2 rounded-lg bg-[#7A1E1E] text-white font-medium hover:bg-[#5d1515] transition-colors disabled:opacity-70 flex justify-center items-center gap-2"
                     >
-                      {loading ? (
-                        <>
-                          <svg className="-ml-1 mr-2 h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Adding...
-                        </>
-                      ) : (
-                        'Add Staff'
-                      )}
+                        {loading && <Plus className="animate-spin" size={16} />}
+                        {loading ? 'Creating...' : 'Create Account'}
                     </button>
-                  </div>
-                </form>
-              </div>
-            </div>
+                </div>
+            </form>
           </div>
+        </div>
       )}
 
       {/* Users Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 p-4">
-        {users.length === 0 ? (
-          <div className="col-span-full text-center py-20 glass-effect rounded-xl p-10 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
-            <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-blue-50 flex items-center justify-center">
-              <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-              </svg>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredUsers.length === 0 ? (
+          <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-[#E2E8F0]">
+            <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center mx-auto mb-4 text-[#94A3B8]">
+                <Search size={32} />
             </div>
-            <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">No Staff Members</h3>
-            <p className="text-[#64748B] text-base">Add your first team member to get started</p>
+            <h3 className="text-lg font-medium text-[#1A1A1A]">No staff members found</h3>
+             <p className="text-[#64748B]">Try adjusting your search terms or add a new team member.</p>
           </div>
         ) : (
-          users.map((user) => (
+          filteredUsers.map((user) => (
             <div 
               key={user.id} 
-              className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-100 relative overflow-hidden h-full flex flex-col"
+              className="bg-white rounded-xl p-6 shadow-sm border border-[#E2E8F0] hover:shadow-lg hover:border-[#FFD700]/30 transition-all group relative overflow-hidden"
             >
-              {/* User avatar and header */}
-              <div className="flex items-start justify-between mb-5">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-bold text-2xl">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">{user.name}</h3>
-                    <p className="text-base text-gray-500 truncate">{user.email}</p>
-                  </div>
+                {/* Decorative background element */}
+                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-${user.role === 'admin' ? '[#7A1E1E]' : user.role === 'kitchen' ? 'orange-500' : 'blue-500'}/5 to-transparent rounded-bl-full -mr-4 -mt-4`} />
+
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold font-serif
+                        ${user.role === 'admin' ? 'bg-[#7A1E1E]/10 text-[#7A1E1E]' :
+                          user.role === 'kitchen' ? 'bg-orange-100 text-orange-700' :
+                          'bg-blue-100 text-blue-700'}
+                    `}>
+                        {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-[#1A1A1A] text-lg leading-tight">{user.name}</h3>
+                        <div className="flex items-center gap-1.5 mt-1">
+                             <span className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide
+                                ${user.role === 'admin' ? 'bg-[#7A1E1E] text-white' :
+                                  user.role === 'kitchen' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-blue-100 text-blue-700'}
+                             `}>
+                                {user.role}
+                             </span>
+                        </div>
+                    </div>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteUser(user.id);
-                  }}
-                  className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200"
-                  title="Delete user"
+                
+                <button 
+                    onClick={() => handleDeleteUser(user.id)}
+                    className="text-[#94A3B8] hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                    title="Remove User"
                 >
-                  <Trash2 size={20} />
+                    <Trash2 size={18} />
                 </button>
               </div>
-              
-              {/* User details */}
-              <div className="space-y-4 mt-6 pt-5 border-t border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-medium text-gray-500">Role</span>
-                  <span
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
-                      user.role === "admin"
-                        ? "bg-purple-100 text-purple-800"
-                        : user.role === "waiter"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-green-100 text-green-800"
-                    }`}
-                  >
-                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  </span>
+
+              <div className="space-y-3 relative z-10">
+                <div className="flex items-center gap-3 text-sm text-[#475569]">
+                    <Mail size={16} className="text-[#94A3B8]" />
+                    <span className="truncate">{user.email}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-medium text-gray-500">Joined</span>
-                  <span className="text-base font-medium text-gray-900">
-                    {new Date(user.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </span>
+                <div className="flex items-center gap-3 text-sm text-[#475569]">
+                    <Calendar size={16} className="text-[#94A3B8]" />
+                    <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                </div>
+                 <div className="flex items-center gap-3 text-sm text-[#475569]">
+                    {user.role === 'kitchen' ? <ChefHat size={16} className="text-[#94A3B8]" /> : 
+                     user.role === 'admin' ? <ShieldCheck size={16} className="text-[#94A3B8]" /> :
+                     <UtensilsCrossed size={16} className="text-[#94A3B8]" />}
+                    <span className="capitalize">{user.role} Access</span>
                 </div>
               </div>
-              
-              {/* Hover effect */}
-              <div className="absolute inset-0 bg-linear-to-br from-blue-50/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+
             </div>
           ))
         )}

@@ -2,14 +2,18 @@
 
 import React, { useState, useMemo } from "react"
 import { useAuth } from "@/context/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useOrders } from "@/hooks/use-orders"
 import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Loader2,
-  CalendarDays,
   TrendingUp,
+  ChevronRight,
+  Utensils,
+  IndianRupee,
+  ShoppingBag,
+  Bell
 } from "lucide-react"
 
 export default function WaiterDashboard() {
@@ -19,24 +23,8 @@ export default function WaiterDashboard() {
   // Orders only for *today*
   const todayOrders = useMemo(() => {
     const now = new Date()
-    const start = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      0,
-      0,
-      0,
-      0,
-    )
-    const end = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      23,
-      59,
-      59,
-      999,
-    )
+    const start = new Date(now.setHours(0, 0, 0, 0))
+    const end = new Date(now.setHours(23, 59, 59, 999))
 
     return orders.filter((o) => {
       const t = new Date(o.timestamp)
@@ -49,353 +37,238 @@ export default function WaiterDashboard() {
   const cookingOrders = orders.filter((o) => o.status === "cooking").length
   const readyOrders = orders.filter((o) => o.status === "ready").length
 
-  const completedToday = todayOrders.filter(
-    (o) => o.status === "delivered",
-  ).length
+  const completedToday = todayOrders.filter((o) => o.status === "delivered").length
   const totalToday = todayOrders.length
-  const activeToday = todayOrders.filter(
-    (o) =>
-      o.status === "pending" ||
-      o.status === "cooking" ||
-      o.status === "ready",
-  ).length
+  const activeToday = todayOrders.filter((o) => ["pending", "cooking", "ready"].includes(o.status)).length
   const revenueToday = todayOrders
     .filter((o) => o.status === "delivered")
     .reduce((sum, o) => sum + (o.totalAmount || 0), 0)
 
-  // Pagination for recent orders
-  const pageSize = 10
+  // Pagination
+  const pageSize = 9
   const [page, setPage] = useState(1)
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
 
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(orders.length / pageSize)),
-    [orders.length],
-  )
-
+  const totalPages = Math.max(1, Math.ceil(orders.length / pageSize))
   const paginatedOrders = useMemo(() => {
     const start = (page - 1) * pageSize
-    const end = start + pageSize
-    return orders.slice(start, end)
+    return orders.slice(start, start + pageSize)
   }, [orders, page])
-
-  const canPrev = page > 1
-  const canNext = page < totalPages
-
-  const handlePrev = () => {
-    if (canPrev) setPage((p) => p - 1)
-  }
-
-  const handleNext = () => {
-    if (canNext) setPage((p) => p + 1)
-  }
 
   const toggleExpand = (orderId: string) => {
     setExpandedOrderId((current) => (current === orderId ? null : orderId))
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back, {userProfile?.name?.split(' ')[0] || 'User'}</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
+    <div className="space-y-8 pb-10">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#7A1E1E] to-[#5d1515] text-[#FFF8E7] p-8 shadow-lg select-none">
+        <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+            <TrendingUp size={120} />
         </div>
-        <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100 shadow-sm">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          <span className="text-sm font-medium text-gray-700">Live Updates</span>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-6 lg:grid-cols-4">
-        {/* Total Orders Card */}
-        <div className="w-full bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-colors">
-          <div className="flex justify-between items-start">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-              <p className="mb-1 text-sm font-medium text-gray-500">Total Orders</p>
-              <h3 className="text-2xl font-bold text-gray-900">{totalToday}</h3>
+                <h1 className="text-3xl font-serif font-bold mb-2 flex items-center gap-3">
+                    <Utensils className="w-8 h-8 text-[#FFD700]" />
+                    Welcome back, {userProfile?.name?.split(' ')[0] || 'Concierge'}
+                </h1>
+                <p className="text-[#FFF8E7]/80 max-w-xl text-lg font-light flex items-center gap-2">
+                    <Clock size={16} className="text-[#FFD700]" />
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
             </div>
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Active Orders Card */}
-        <div className="w-full bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-colors">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="mb-1 text-sm font-medium text-gray-500">In Progress</p>
-              <h3 className="text-2xl font-bold text-orange-600">{activeToday}</h3>
-            </div>
-            <div className="p-2 bg-orange-50 rounded-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Completed Orders Card */}
-        <div className="w-full bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-colors">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="mb-1 text-sm font-medium text-gray-500">Completed</p>
-              <h3 className="text-2xl font-bold text-green-600">{completedToday}</h3>
-              <div className="flex items-center mt-1">
-                
-                
-              </div>
-            </div>
-            <div className="p-2 rounded-lg bg-green-50">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Revenue Card */}
-        <div className="w-full bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-colors">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="mb-1 text-sm font-medium text-gray-500">Today's Revenue</p>
-              <h3 className="text-2xl font-bold text-amber-700">₹{revenueToday.toFixed(2)}</h3>
-              <div className="flex items-center mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-                <span className="text-[10px] xs:text-xs font-medium text-amber-600 ml-1">
-                  {totalToday > 0 ? Math.round((revenueToday / (revenueToday * 1.5)) * 100) : 0}% from yesterday
+            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-[#FFD700]/20 shadow-sm">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                 </span>
+                <span className="text-sm font-bold text-[#FFD700] tracking-wide">System Online</span>
+            </div>
+        </div>
+      </div>
+
+      {/* Stats Grid - Premium Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: "Today's Orders", value: totalToday, icon: <ShoppingBag size={20} />, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Active Now", value: activeToday, icon: <Bell size={20} />, color: "text-[#7A1E1E]", bg: "bg-red-50" },
+          { label: "Completed", value: completedToday, icon: <CheckCircle size={20} />, color: "text-green-600", bg: "bg-green-50" },
+          { label: "My Revenue", value: `₹${revenueToday.toLocaleString()}`, icon: <IndianRupee size={20} />, color: "text-[#FFD700]", bg: "bg-[#1A1A1A]" },
+        ].map((stat, idx) => (
+          <div key={idx} className="group bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
+                <h3 className={`text-3xl font-serif font-bold ${idx === 3 ? 'text-[#1A1A1A]' : 'text-gray-900'}`}>{stat.value}</h3>
+              </div>
+              <div className={`p-3.5 rounded-xl shadow-inner ${stat.bg} ${stat.color}`}>
+                {stat.icon}
               </div>
             </div>
-            <div className="p-2 bg-amber-50 rounded-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Order Stats (Pending, Cooking, Ready) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="glass-effect p-5 rounded-lg border-l-4 border-orange-400">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[#64748B] mb-1">
-                Pending
-              </p>
-              <p className="text-3xl font-serif font-bold text-[#7A1E1E]">
-                {pendingOrders}
-              </p>
-            </div>
-            <div className="bg-orange-100 p-3 rounded-lg">
-              <AlertCircle className="text-orange-600" size={22} />
-            </div>
-          </div>
-          <p className="mt-2 text-xs text-[#94A3B8]">
-            Orders waiting for the kitchen to start.
-          </p>
-        </div>
-
-        <div className="glass-effect p-5 rounded-lg border-l-4 border-yellow-400">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[#64748B] mb-1">
-                Cooking
-              </p>
-              <p className="text-3xl font-serif font-bold text-[#7A1E1E]">
-                {cookingOrders}
-              </p>
-            </div>
-            <div className="bg-[#FFD700]/20 p-3 rounded-lg">
-              <Clock className="text-[#FFD700]" size={22} />
-            </div>
-          </div>
-          <p className="mt-2 text-xs text-[#94A3B8]">
-            Orders currently being prepared.
-          </p>
-        </div>
-
-        <div className="glass-effect p-5 rounded-lg border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[#64748B] mb-1">
-                Ready to serve
-              </p>
-              <p className="text-3xl font-serif font-bold text-[#7A1E1E]">
-                {readyOrders}
-              </p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <CheckCircle className="text-green-600" size={22} />
-            </div>
-          </div>
-          <p className="mt-2 text-xs text-[#94A3B8]">
-            Take these to guests as soon as possible.
-          </p>
-        </div>
-      </div>
-
-      {/* Recent Orders - Card Layout */}
-      <div className="glass-effect p-6 rounded-lg">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-xl font-serif font-bold text-[#1A1A1A]">
-              Recent Orders
-            </h3>
-            <p className="text-sm text-[#64748B] mt-1">
-              Showing {paginatedOrders.length} of {orders.length} total orders
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrev}
-              disabled={!canPrev}
-              className={`p-2 rounded-full ${
-                canPrev
-                  ? "text-[#1E293B] hover:bg-[#E2E8F0]"
-                  : "text-[#94A3B8] cursor-not-allowed"
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m15 18-6-6 6-6"/>
-              </svg>
-            </button>
-            <span className="text-sm text-[#64748B] w-16 text-center">
-              {page}/{totalPages}
-            </span>
-            <button
-              onClick={handleNext}
-              disabled={!canNext}
-              className={`p-2 rounded-full ${
-                canNext
-                  ? "text-[#1E293B] hover:bg-[#E2E8F0]"
-                  : "text-[#94A3B8] cursor-not-allowed"
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m9 18 6-6-6-6"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-12 text-[#64748B] gap-3">
-            <Loader2 className="animate-spin text-[#7A1E1E]" size={28} />
-            <span>Loading orders...</span>
-          </div>
-        ) : paginatedOrders.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="mx-auto w-16 h-16 bg-[#F1F5F9] rounded-full flex items-center justify-center mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-                <path d="M3 6h18"/>
-                <path d="M16 10a4 4 0 0 1-8 0"/>
-              </svg>
-            </div>
-            <h4 className="font-medium text-[#1A1A1A]">No orders yet</h4>
-            <p className="text-sm text-[#64748B] mt-1 max-w-xs mx-auto">
-              When you create new orders, they'll appear here
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedOrders.map((order) => {
-              const tableLabel = order.table.replace(/^[Tt]able\s*/, "")
-              const dt = new Date(order.timestamp)
-              const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-              const timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-              const isExpanded = expandedOrderId === order.id
-
-              return (
-                <div 
-                  key={order.id}
-                  className={`bg-white rounded-xl border border-[#E2E8F0] overflow-hidden transition-all duration-200 ${isExpanded ? 'ring-2 ring-[#7A1E1E]' : 'hover:shadow-md'}`}
-                >
-                  <div 
-                    className="p-4 cursor-pointer"
-                    onClick={() => toggleExpand(order.id)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-[#1A1A1A]">
-                            Order #{order.orderNumber || order.id.slice(-6)}
-                          </h4>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                            order.status === "pending"
-                              ? "bg-orange-100 text-orange-800"
-                              : order.status === "cooking"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : order.status === "ready"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}>
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-[#64748B]">
-                          Table {tableLabel} • {order.items.length} items
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-[#1A1A1A]">
-                          ₹{order.totalAmount.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-[#94A3B8] mt-0.5">
-                          {dateStr} • {timeStr}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="border-t border-[#E2E8F0] p-4 bg-[#F8FAFC]">
-                      <div className="space-y-3">
-                        <h5 className="text-sm font-medium text-[#475569] mb-1">
-                          Order Items
-                        </h5>
-                        {order.items.map((item, index) => (
-                          <div key={index} className="flex justify-between items-start text-sm">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-[#1A1A1A] truncate">
-                                {item.name}
-                              </p>
-                              <p className="text-xs text-[#64748B] mt-0.5">
-                                Qty: {item.quantity} × ₹{item.price.toFixed(2)}
-                              </p>
-                            </div>
-                            <div className="ml-4 font-medium text-[#1A1A1A] whitespace-nowrap">
-                              ₹{(item.price * item.quantity).toFixed(2)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 pt-3 border-t border-[#E2E8F0]">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium text-[#475569]">Total</span>
-                          <span className="font-semibold text-[#1A1A1A]">
-                            ₹{order.totalAmount.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+            {idx === 3 && (
+                <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full w-3/4 bg-[#FFD700] rounded-full" />
                 </div>
-              )
-            })}
+            )}
           </div>
-        )}
+        ))}
+      </div>
+
+      {/* Kitchen Status Pulse - Redesigned */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Ready to Serve - Hero Card */}
+        <div className="lg:col-span-1 bg-gradient-to-br from-green-50 to-white p-6 rounded-2xl border border-green-100 shadow-sm relative overflow-hidden group">
+            <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-green-100 text-green-700 rounded-lg">
+                        <CheckCircle size={20} />
+                    </div>
+                    <h3 className="font-bold text-gray-800 uppercase tracking-wide text-sm">Ready to Serve</h3>
+                </div>
+                <div className="flex items-end gap-3">
+                    <p className="text-5xl font-serif font-bold text-green-700">{readyOrders}</p>
+                    <p className="text-sm font-medium text-green-600 mb-2">Orders ready</p>
+                </div>
+                {readyOrders > 0 && (
+                    <div className="mt-4 px-3 py-1.5 bg-green-100 text-green-800 text-xs font-bold rounded-full inline-block animate-pulse">
+                        Action Required
+                    </div>
+                )}
+            </div>
+            {/* Background decoration */}
+            <CheckCircle className="absolute -right-6 -bottom-6 text-green-100 w-32 h-32 transform rotate-12 group-hover:scale-110 transition-transform" />
+        </div>
+
+        {/* Small Status Adjustments */}
+        <div className="lg:col-span-2 grid grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-orange-100 shadow-sm flex items-center justify-between group">
+                <div>
+                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending</p>
+                     <p className="text-3xl font-serif font-bold text-orange-600 mt-1">{pendingOrders}</p>
+                     <p className="text-xs text-gray-500 mt-1">Waiting acceptance</p>
+                </div>
+                <div className="p-3 bg-orange-50 text-orange-500 rounded-full group-hover:bg-orange-100 transition-colors">
+                    <AlertCircle size={24} />
+                </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-yellow-100 shadow-sm flex items-center justify-between group">
+                <div>
+                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Cooking</p>
+                     <p className="text-3xl font-serif font-bold text-yellow-600 mt-1">{cookingOrders}</p>
+                     <p className="text-xs text-gray-500 mt-1">In Preparation</p>
+                </div>
+                <div className="p-3 bg-yellow-50 text-yellow-500 rounded-full group-hover:bg-yellow-100 transition-colors">
+                    <LoadingSpinner variant="tiny" size={24} />
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* Recent Activity List - Premium Table Styling */}
+      <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 overflow-hidden">
+        <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-1 bg-[#7A1E1E] rounded-full" />
+            <h2 className="text-xl font-bold font-serif text-[#1A1A1A]">Recent Activity</h2>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-500 hover:text-[#7A1E1E] hover:border-[#7A1E1E] rounded-lg disabled:opacity-30 transition-all font-bold shadow-sm"
+            >
+              <ChevronRight className="rotate-180 w-4 h-4" />
+            </button>
+            <button 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+               className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-500 hover:text-[#7A1E1E] hover:border-[#7A1E1E] rounded-lg disabled:opacity-30 transition-all font-bold shadow-sm"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-gray-50/30">
+          {paginatedOrders.length === 0 ? (
+              <div className="col-span-full py-12 text-center text-gray-400 flex flex-col items-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-300">
+                    <ShoppingBag size={24} />
+                  </div>
+                  <p>No orders recorded for today.</p>
+              </div>
+          ) : (
+             paginatedOrders.map((order) => {
+                const isExpanded = expandedOrderId === order.id
+                return (
+                  <div 
+                    key={order.id}
+                    className={`group bg-white rounded-xl border transition-all duration-300 overflow-hidden ${
+                      isExpanded ? 'border-[#7A1E1E] shadow-xl ring-1 ring-[#7A1E1E]/10 translate-y-[-4px]' : 'border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200'
+                    }`}
+                  >
+                    <div 
+                      className="p-5 cursor-pointer"
+                      onClick={() => toggleExpand(order.id)}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-lg bg-[#1A1A1A] text-[#FFF8E7] flex items-center justify-center font-serif font-bold text-lg shadow-sm">
+                                {order.table.replace(/^\D+/, "")}
+                           </div>
+                           <div>
+                             <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Table</p>
+                             <p className="text-xs text-gray-500 font-mono">#{order.orderNumber || order.id.slice(-4)}</p>
+                           </div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                          {
+                            pending: "bg-orange-50 text-orange-600 border-orange-100",
+                            cooking: "bg-yellow-50 text-yellow-600 border-yellow-100",
+                            ready: "bg-green-50 text-green-600 border-green-100",
+                            delivered: "bg-blue-50 text-blue-600 border-blue-100",
+                            cancelled: "bg-red-50 text-red-600 border-red-100"
+                          }[order.status]
+                        }`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-end border-t border-gray-50 pt-4 mt-2">
+                        <p className="text-sm font-medium text-gray-600 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-gray-300" />
+                            {order.items.length} items
+                        </p>
+                        <p className="text-lg font-serif font-bold text-[#1A1A1A]">₹{order.totalAmount.toFixed(0)}</p>
+                      </div>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="bg-[#FAFAFA] text-sm p-5 border-t border-gray-100 animate-in slide-in-from-top-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Order Details</p>
+                        <ul className="space-y-3">
+                          {order.items.map((item, i) => (
+                            <li key={i} className="flex justify-between items-center group/item hover:bg-white p-1 rounded transition-colors">
+                              <span className="text-gray-700 flex items-center gap-2">
+                                <span className="font-bold text-[#7A1E1E] bg-[#7A1E1E]/10 w-5 h-5 flex items-center justify-center rounded text-xs">{item.quantity}</span> 
+                                <span className="font-medium">{item.name}</span>
+                              </span>
+                              <span className="text-gray-500 font-mono text-xs">₹{(item.price * item.quantity).toFixed(0)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="text-[10px] text-center text-gray-400 mt-4 pt-3 border-t border-gray-100 flex items-center justify-center gap-2">
+                          <Clock size={10} />
+                          {new Date(order.timestamp).toLocaleString()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+             })
+          )}
+        </div>
       </div>
     </div>
   )
