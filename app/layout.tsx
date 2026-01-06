@@ -11,7 +11,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 export const metadata: Metadata = {
   title: "Restaurant Management System",
   description: "Premium restaurant management dashboard with real-time order tracking",
-    generator: 'v0.app'
+  generator: 'v0.app',
+  icons: {
+    icon: '/icon.png',
+  },
 }
 
 export default function RootLayout({

@@ -58,8 +58,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md mx-4 relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex p-4 rounded-full bg-white shadow-xl shadow-[#7A1E1E]/5 mb-4 border border-[#FFD700]/10">
-            <img src="/icon.png" alt="Icon" className="h-10 w-10" />
+          <div className="inline-flex w-24 h-24 rounded-full bg-white shadow-xl shadow-[#7A1E1E]/5 mb-4 border border-[#FFD700]/10 overflow-hidden items-center justify-center">
+            <img src="/icon.png" alt="Icon" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-4xl font-serif font-bold text-[#1A1A1A] tracking-tight mb-2">
             Restaurant<span className="text-[#7A1E1E]">Manager</span>
