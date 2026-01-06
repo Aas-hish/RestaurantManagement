@@ -222,7 +222,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Premium Header user-select-none to prevent text selection while interacting with charts */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#7A1E1E] to-[#5d1515] text-[#FFF8E7] p-8 shadow-lg select-none">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-[#7A1E1E] to-[#5d1515] text-[#FFF8E7] p-8 shadow-lg select-none">
         <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
             <TrendingUp size={120} />
         </div>
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Total Revenue Card */}
         <div className="bg-white rounded-2xl p-6 shadow-md border border-[#E2E8F0] relative overflow-hidden group hover:border-[#FFD700]/50 transition-all">
-           <div className="absolute right-[-20px] top-[-20px] bg-[#FFD700]/10 w-40 h-40 rounded-full group-hover:scale-110 transition-transform" />
+           <div className="absolute -right-5 -top-5 bg-[#FFD700]/10 w-40 h-40 rounded-full group-hover:scale-110 transition-transform" />
            <div className="relative z-10">
               <div className="flex justify-between items-start mb-4">
                   <div className="w-12 h-12 bg-[#FFD700]/20 rounded-xl flex items-center justify-center text-[#998100]">
@@ -290,7 +290,7 @@ export default function AdminDashboard() {
 
         {/* Total Orders Card */}
         <div className="bg-white rounded-2xl p-6 shadow-md border border-[#E2E8F0] relative overflow-hidden group hover:border-[#7A1E1E]/50 transition-all">
-           <div className="absolute right-[-20px] top-[-20px] bg-[#7A1E1E]/5 w-40 h-40 rounded-full group-hover:scale-110 transition-transform" />
+           <div className="absolute -right-5 -top-5 bg-[#7A1E1E]/5 w-40 h-40 rounded-full group-hover:scale-110 transition-transform" />
            <div className="relative z-10">
               <div className="flex justify-between items-start mb-4">
                  <div className="w-12 h-12 bg-[#7A1E1E]/10 rounded-xl flex items-center justify-center text-[#7A1E1E]">
