@@ -239,7 +239,7 @@ export default function MenuPage() {
                 {/* Price Tag */}
                 <div className="absolute bottom-4 left-4 z-20">
                   <div className="flex items-baseline gap-1 text-white">
-                     <span className="text-sm font-light opacity-80">$</span>
+                     <span className="text-sm font-light opacity-80">₹</span>
                      <span className="text-3xl font-serif font-bold tracking-tight">{item.price.toFixed(2)}</span>
                   </div>
                 </div>

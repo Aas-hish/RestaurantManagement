@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
 import { useMenu } from "@/hooks/use-menu"
 import { useOrders } from "@/hooks/use-orders"
-import { Plus, Trash2, AlertCircle, Search, Utensils, Minus, ChefHat, Info } from "lucide-react"
+import { Plus, Trash2, AlertCircle, Search, Utensils, Minus, ChefHat, Info, X } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import type { OrderItem } from "@/types"
 
@@ -59,6 +59,7 @@ export default function NewOrderPage() {
     message: "",
   })
 
+  const [showCart, setShowCart] = useState(false)
   const categories = ["All", "Appetizer", "Main Course", "Dessert", "Beverage", "Special"]
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [query, setQuery] = useState("")
@@ -196,12 +197,12 @@ export default function NewOrderPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className={`grid grid-cols-1 gap-8 ${selectedItems.length > 0 ? 'md:grid-cols-3' : ''}`}>
         {/* Left Column: Menu */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={`space-y-6 ${selectedItems.length > 0 ? 'md:col-span-2' : ''}`}>
           
           {/* Search & Filters */}
-          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm sticky top-20 z-10">
+          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm sticky top-20 z-30">
              <div className="relative mb-4">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
@@ -242,7 +243,7 @@ export default function NewOrderPage() {
                     <p className="text-gray-500 font-medium">No items match your search.</p>
                 </div>
              ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className={`grid grid-cols-2 gap-5 ${selectedItems.length > 0 ? 'lg:grid-cols-3' : 'md:grid-cols-3 lg:grid-cols-4'}`}>
                 {filteredItems.map((item) => (
                     <div key={item.id} className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
                     
@@ -308,15 +309,50 @@ export default function NewOrderPage() {
           </div>
         </div>
 
-        {/* Right Column: Order Summary */}
-        <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 sticky top-24 overflow-hidden flex flex-col max-h-[calc(100vh-8rem)]">
+        {/* Mobile Bottom Cart Bar */}
+        {selectedItems.length > 0 && (
+            <div className="fixed bottom-6 left-6 right-6 z-40 md:hidden animate-in slide-in-from-bottom-6 fade-in duration-300">
+                <button 
+                  onClick={() => setShowCart(true)}
+                  className="w-full bg-[#1A1A1A] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between group active:scale-95 transition-all border border-gray-800"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="bg-[#7A1E1E] w-10 h-10 rounded-full flex items-center justify-center font-bold text-[#FFD700] border border-white/10 shadow-inner">
+                            {selectedItems.reduce((a, b) => a + b.quantity, 0)}
+                        </div>
+                        <div className="text-left">
+                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Total</p>
+                            <p className="font-serif font-bold text-lg leading-none">₹{calculateTotal().toFixed(0)}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 pr-2">
+                        <span className="text-sm font-bold text-gray-200 group-hover:text-white">View Ticket</span>
+                        <ChefHat size={18} className="text-[#FFD700]" />
+                    </div>
+                </button>
+            </div>
+        )}
+
+        {/* Right Column: Order Summary (Responsive Modal) */}
+        <div className={`md:col-span-1 ${showCart ? 'fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4' : 'hidden'} ${selectedItems.length > 0 ? 'md:block' : ''}`}>
+            
+            {/* Mobile Backdrop Click to Close */}
+            <div className="absolute inset-0 md:hidden" onClick={() => setShowCart(false)}></div>
+
+            <div className={`bg-white md:rounded-2xl rounded-t-3xl sm:rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 md:sticky md:top-24 overflow-hidden flex flex-col w-full md:w-auto h-[85vh] md:h-auto md:max-h-[calc(100vh-8rem)] transition-all duration-300 ${showCart ? 'animate-in slide-in-from-bottom' : ''}`}>
                 {/* Header */}
-                <div className="p-5 border-b border-gray-100 bg-gray-50/50">
+                <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center sticky top-0 bg-white z-10">
                     <h3 className="text-lg font-serif font-bold text-[#1A1A1A] flex items-center gap-2">
                         <ChefHat className="text-[#7A1E1E]" size={20} />
                         Current Ticket
                     </h3>
+                    {/* Mobile Close Button */}
+                    <button 
+                       onClick={() => setShowCart(false)}
+                       className="md:hidden p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"
+                    >
+                        <X size={16} />
+                    </button>
                 </div>
 
                 {/* Table Input */}
@@ -331,7 +367,7 @@ export default function NewOrderPage() {
                         placeholder="00"
                         className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-serif font-bold text-lg text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#7A1E1E] transition-all"
                         min="1"
-                        autoFocus
+                        autoFocus={!showCart} // Don't autofocus on mobile open to avoid keyboard pop
                         />
                     </div>
                 </div>
