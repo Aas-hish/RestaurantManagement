@@ -141,7 +141,10 @@ export default function NewOrderPage() {
       setTableNumber("")
       setSelectedItems([])
 
-      setTimeout(() => setSuccess(false), 3000)
+      setTimeout(() => {
+        setSuccess(false)
+        setShowCart(false)
+      }, 3000)
     } catch (error) {
       console.error("Error creating order:", error)
       setAlert({
