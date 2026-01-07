@@ -355,6 +355,24 @@ export default function NewOrderPage() {
                     </button>
                 </div>
 
+                {success ? (
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 animate-in zoom-in-95 duration-300">
+                        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600 shadow-xl shadow-green-100 mb-6 animate-bounce">
+                            <ChefHat size={48} />
+                        </div>
+                        <h4 className="text-3xl font-serif font-bold text-[#1A1A1A] mb-2 text-center">Order Placed!</h4>
+                        <p className="text-gray-500 text-center px-4 text-lg mb-8">
+                            Ticket #{selectedItems.length > 0 ? "..." : "Sent"} has been sent to the kitchen.
+                        </p>
+                        <button 
+                            onClick={() => setShowCart(false)}
+                            className="bg-[#1A1A1A] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#7A1E1E] transition-colors shadow-lg"
+                        >
+                            Start New Order
+                        </button>
+                    </div>
+                ) : (
+                    <>
                 {/* Table Input */}
                 <div className="p-5 border-b border-gray-100">
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Table Number</label>
@@ -443,6 +461,8 @@ export default function NewOrderPage() {
                     </button>
                     {selectedItems.length > 0 && <p className="text-[10px] text-center text-gray-400">Review items before submitting</p>}
                 </div>
+                </>
+                )}
             </div>
         </div>
       </div>
