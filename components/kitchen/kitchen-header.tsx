@@ -99,7 +99,7 @@ export function KitchenHeader() {
 
       {/* Refined Minimal Sidebar */}
       <aside
-        className={`fixed right-0 top-0 z-50 h-full w-[360px] bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
+        className={`fixed right-0 top-0 z-50 h-full w-[280px] sm:w-[360px] bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
           profileOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

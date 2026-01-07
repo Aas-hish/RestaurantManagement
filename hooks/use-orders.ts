@@ -207,7 +207,7 @@ export function useOrders(filter?: {
         const app = apps.length ? apps[0] : initializeApp(config)
         const db = getFirestore(app)
 
-        const restaurantIdForOrder = (order as any).restaurantId
+        const restaurantIdForOrder = (order as any).restaurantId || restaurantId
 
         if (!restaurantIdForOrder) {
           throw new Error(
